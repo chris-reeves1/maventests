@@ -2,40 +2,38 @@ pipeline {
     agent any 
 
     tools {
-        maven 'M3'  // Your Maven installation name
-        jdk 'JDK'   // Your JDK installation name
+        maven "M3"
     }
-    
+
     stages {
-        stage('Build') {
+        stage('Compile') {
             steps {
-                // Compile the code and package it
                 script {
-                    mvn 'clean package'
+                    // Using the Maven Pipeline Plugin's mvn command
+                    mvn "clean compile"
                 }
             }
         }
-
         stage('Test') {
             steps {
-                // Run unit tests
                 script {
-                    mvn 'test'
+                    mvn "test"
+                }
+            }
+        }
+        stage('Package') {
+            steps {
+                script {
+                    // Skips running tests during the package phase
+                    mvn "-DskipTests package"
                 }
             }
             post {
-                always {
-                    // Archive the test results
+                success {
                     junit '**/target/surefire-reports/TEST-*.xml'
+                    archiveArtifacts 'target/*.jar'
                 }
-            }
-        }
-
-        stage('Archive') {
-            steps {
-                // Archive the artifact
-                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
-            }
-        }
+            }  
+        }    
     }
 }
